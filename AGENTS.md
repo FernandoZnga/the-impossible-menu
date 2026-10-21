@@ -15,6 +15,10 @@
 - Add compatibility rules to the central rule evaluator, with readable explanations and a way to recover. Keep impossible mode challenging but completable.
 - Validate incompatible options before mock checkout. Handle defaults, deleted/changed upstream choices, and missing optional selections without crashing.
 - Prefer integer minor currency units and shared formatting helpers where the domain model supports them; do not silently change model units.
+- Add dishes to the cuisine's recipe data with a distinct name, description, base price/calories, and pantry ingredients. Verify the generated category, dietary/allergen metadata, substitutions, restrictions, and stable slug; maintain catalog coverage tests.
+- Add ingredients to the typed pantry with unit price/calories, allergens, and allowed quantities. A base dish already includes one unit of every listed ingredient: quantity adjustments are `(quantity - 1) × unit value`, then scaled by its explicit portion multiplier.
+- Protein substitutions replace the first `protein-*` ingredient at its selected quantity. Keep substitution incompatibility IDs aligned with the catalog; extras are additions, not a second copy of base ingredients.
+- Dependency rules must be deterministic, preserve compatible selections, leave the input/catalog unmodified, and be idempotent after resolution. Give every rule a stable ID, clear message, valid revisit stage, and regression tests for resolution and recovery.
 
 ## Events, timing, and privacy
 
