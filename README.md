@@ -1,5 +1,50 @@
 # The Impossible Menu
 
+## Showcase branch — no installation or build
+
+**`copilot/showcase` is a standalone showcase branch, not intended to be merged into `main`.** The editable showcase lives in [`showcase/`](showcase/): plain HTML, CSS, and browser JavaScript, with no framework runtime, package installation, build step, backend, or CDN dependency.
+
+### Try it
+
+- Once the repository owner enables and deploys GitHub Pages, visit **https://fernandoznga.github.io/the-impossible-menu/**. Visitors only need a browser.
+- For an offline preview, download this branch's ZIP, extract it, and double-click `showcase/index.html`. No local server or Node.js is required. Browser storage availability can differ for local files; the app falls back to in-memory records when storage is unavailable.
+
+### Publish this branch
+
+1. In **Settings → Pages → Build and deployment**, select **GitHub Actions**.
+2. If the `github-pages` environment restricts deployments to `main`, allow **`copilot/showcase`** in **Settings → Environments → github-pages → Deployment branches and tags**.
+3. In **Actions → Deploy showcase to GitHub Pages**, choose **Run workflow**, selecting **`copilot/showcase`**. Later pushes to this branch redeploy automatically.
+4. Open the deployment URL from the `github-pages` environment.
+
+The workflow uploads `showcase/` directly using GitHub's Pages actions. It does **not** run npm, TypeScript, Vite, or a build. All runtime asset paths are relative, so the same files work at the repository subpath, on another static host, or offline. Repository Pages settings are not changed automatically by this code.
+
+**A repository has one Pages site:** deploying this showcase replaces the existing Pages deployment, if any. It does not modify `main`; a later deployment from `main` can replace the site again. This branch's workflow only deploys from `copilot/showcase` (or `showcase` if the owner later renames the branch).
+
+### Showcase versus development
+
+The showcase is a separately maintained, simplified demonstration of the menu experience, not a generated bundle or a promise of exact feature/measurement parity with the React application. It retains the simple/impossible contrast, customization, illustrative totals, mock completion, and local reflection. Nothing submits a real order or payment.
+
+Showcase records stay on the device and use separate versioned storage from the original application. They are not interchangeable with the React study records. No third-party analytics, accounts, or remote persistence are used. These descriptive measurements are **not validated diagnoses of fatigue or proof of causation**.
+
+To change the showcase, clone **this branch** and edit the files in `showcase/` directly. To develop the full React/TypeScript experiment, clone **`main`** and use its documented npm workflow. The original source, development tooling, and license remain in this branch for reference; they are not required by visitors or used by the showcase deployment.
+
+For maintainers only, **Showcase checks** installs the existing development dependencies and runs lint and standalone browser acceptance tests; it never builds the application. To run those checks yourself:
+
+```sh
+npm ci
+npm run lint
+npx playwright install chromium
+npx playwright test --config e2e/showcase/playwright.config.ts
+```
+
+These tools are optional for editing/previewing the static files and are unrelated to the no-build Pages publishing workflow.
+
+---
+
+## Original React application — development reference
+
+The sections below describe the original application retained in `src/`, **not the simplified standalone showcase**.
+
 A fictional food-ordering experience that explores **choice overload, decision fatigue, and decision paralysis**. Compare a deliberately streamlined ordering flow with a much more demanding one, then reflect on the experience and inspect the measurements on your own device.
 
 **This is an educational prototype, not a restaurant.** No real orders, payments, accounts, delivery addresses, or external analytics services are involved. Prices and nutrition are illustrative; do not use the catalog for dietary or medical decisions.
@@ -135,14 +180,9 @@ docker run --rm -p 8080:80 impossible-menu
 
 The multi-stage image builds with `node:22-alpine` and serves only static output using `nginx:stable-alpine`. Nginx provides SPA fallback, long caching for hashed `/assets/` files, fresh HTML, a restrictive content-security policy, and defensive browser headers. Root-path hosting is the default. Put production HTTPS/TLS at your reverse proxy or hosting layer; the container itself serves HTTP. Browser local data remains in the visitor's browser, not inside the container.
 
-## GitHub Pages
+## Original application's static hosting
 
-1. In repository **Settings → Pages → Build and deployment**, select **GitHub Actions**.
-2. Push to `main` or manually run **Deploy GitHub Pages**.
-3. The workflow builds with `VITE_BASE_PATH=/the-impossible-menu/`, uploads `dist/`, and deploys through GitHub's official Pages artifact workflow.
-4. Open the deployment URL shown by the `github-pages` environment.
-
-The workflow has explicit `contents: read`, `pages: write`, and `id-token: write` permissions. No deploy token or external service is required. If the repository is renamed or uses a custom domain/root site, update the Pages base path accordingly. For other static hosts:
+This branch publishes the standalone showcase using the instructions at the top of this README. To build the retained React application for a separate static host, use:
 
 ```sh
 VITE_BASE_PATH=/your-subpath/ npm run build

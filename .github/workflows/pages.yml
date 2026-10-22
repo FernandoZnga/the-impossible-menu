@@ -1,8 +1,8 @@
-name: Deploy GitHub Pages
+name: Deploy showcase to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: [copilot/showcase, showcase]
   workflow_dispatch:
 
 permissions:
@@ -15,26 +15,19 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
+  publish:
+    if: github.ref == 'refs/heads/copilot/showcase' || github.ref == 'refs/heads/showcase'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
       - uses: actions/configure-pages@v5
-      - run: npm run build
-        env:
-          VITE_BASE_PATH: /the-impossible-menu/
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: showcase
 
   deploy:
-    needs: build
+    needs: publish
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment:
