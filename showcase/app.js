@@ -292,6 +292,7 @@
         focusMain();
       } else goto(stageIndex + 1);
     }, 'primary'));
+    if (view !== 'order' || !A.running()) return;
     panel.append(error, actions);
     layout.append(panel, summary());
     main.append(layout);
