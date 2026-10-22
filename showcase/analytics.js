@@ -35,24 +35,75 @@ window.MenuAnalytics = (() => {
   let current = null;
   let tick = null;
   let enabled = true;
+  let dirty = null;
+  let newSession = false;
   const now = () => performance.now();
-  function save() {
-    if (!storageAvailable) return;
-    try { localStorage.setItem(key, JSON.stringify(data)); }
-    catch { storageAvailable = false; warning = 'Storage could not be written. Data is kept in memory for this visit.'; }
+  function readLatest() {
+    const raw = localStorage.getItem(key);
+    if (!raw) return { version: 1, sessions: [] };
+    const latest = validate(JSON.parse(raw));
+    if (latest) return latest;
+    warning = 'Incompatible or corrupt showcase data was ignored.';
+    return { version: 1, sessions: [] };
   }
-  data.sessions.forEach(row => {
-    if (row.status === 'running') { row.status = 'interrupted'; row.endedAt = new Date().toISOString(); }
+  function adopt(latest) {
+    data = latest;
+    const index = current ? latest.sessions.findIndex(row => row.id === current.id) : -1;
+    if (current && !newSession && index < 0) {
+      current = null;
+      tick = null;
+      dirty = null;
+      return true;
+    } else if (current && index >= 0) data.sessions[index] = current;
+    return false;
+  }
+  function save() {
+    if (!storageAvailable) return true;
+    try {
+      const latest = readLatest();
+      const discarded = Boolean(dirty && !newSession && !latest.sessions.some(row => row.id === dirty.id));
+      // Only this tab owns its session. Missing existing records indicate a clear
+      // or retention eviction, and must not be resurrected by a delayed timer.
+      if (dirty && (newSession || latest.sessions.some(row => row.id === dirty.id))) {
+        const index = latest.sessions.findIndex(row => row.id === dirty.id);
+        if (index < 0) latest.sessions.push(dirty);
+        else latest.sessions[index] = dirty;
+        latest.sessions = latest.sessions.slice(-200);
+        localStorage.setItem(key, JSON.stringify(latest));
+      }
+      dirty = null;
+      newSession = false;
+      const canceled = adopt(latest);
+      if (discarded || canceled) window.dispatchEvent(new Event('showcase-storage-change'));
+      return !discarded && !canceled;
+    }
+    catch {
+      storageAvailable = false;
+      warning = 'Storage could not be written. Data is kept in memory for this visit.';
+      return true;
+    }
+  }
+  window.addEventListener('storage', event => {
+    if (!storageAvailable || (event.key !== key && event.key !== null)) return;
+    try {
+      adopt(readLatest());
+      window.dispatchEvent(new Event('showcase-storage-change'));
+    } catch {
+      storageAvailable = false;
+      warning = 'Local storage is unavailable or unreadable. This visit uses memory only.';
+    }
   });
-  save();
   function flush() {
-    if (current && tick !== null) current.activeMs += Math.max(0, now() - tick);
+    if (current && tick !== null) {
+      const elapsed = Math.max(0, now() - tick);
+      if (elapsed > 0) { current.activeMs += elapsed; dirty = current; }
+    }
     tick = null;
   }
   function sync() {
     flush();
-    if (current && enabled && !document.hidden && document.hasFocus()) tick = now();
     save();
+    if (current && enabled && !document.hidden && document.hasFocus()) tick = now();
   }
   document.addEventListener('visibilitychange', sync);
   window.addEventListener('focus', sync);
@@ -67,10 +118,10 @@ window.MenuAnalytics = (() => {
     flush();
     current.status = status;
     current.endedAt = new Date().toISOString();
+    dirty = current;
     const result = { ...current };
     current = null;
-    save();
-    return result;
+    return save() ? result : null;
   }
   window.addEventListener('pagehide', () => {
     finish('interrupted');
@@ -87,12 +138,15 @@ window.MenuAnalytics = (() => {
     };
     if (data.sessions.length >= 200) data.sessions.shift();
     data.sessions.push(current);
+    dirty = current;
+    newSession = true;
     enabled = true;
     sync();
   }
   function record(type, amount = 1) {
     if (!current || !['actions', 'changes', 'backtracks', 'optionsShown', 'conflicts'].includes(type)) return;
     current[type] += amount;
+    dirty = current;
     save();
   }
   function snapshot() { sync(); return JSON.parse(JSON.stringify(data)); }
@@ -122,6 +176,12 @@ window.MenuAnalytics = (() => {
     resume: () => { enabled = true; sync(); },
     running: () => Boolean(current),
     warning: () => warning,
-    clear: () => { current = null; tick = null; data = { version: 1, sessions: [] }; save(); },
+    clear: () => {
+      current = null; tick = null; dirty = null; newSession = false;
+      data = { version: 1, sessions: [] };
+      if (!storageAvailable) return;
+      try { localStorage.setItem(key, JSON.stringify(data)); }
+      catch { storageAvailable = false; warning = 'Storage could not be written. Data is kept in memory for this visit.'; }
+    },
   };
 })();

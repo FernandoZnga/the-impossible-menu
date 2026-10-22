@@ -226,12 +226,15 @@
     renderOrder();
   }
   function renderOrder(moveFocus = true) {
+    if (!A.running()) return;
     view = 'order';
     main.replaceChildren();
     const progress = el('div', undefined, 'progress-row');
     progress.append(el('span', `${mode === 'simple' ? 'Simple' : 'Impossible'} · Step ${stageIndex + 1} of ${steps().length}`, 'eyebrow'),
       button('Exit experiment', () => confirmDialog('Leave this experiment?', 'This records a deliberate abandonment, not a completed order.', 'Leave experiment', () => {
-        result = A.finish('abandoned'); view = 'debrief'; renderDebrief(); focusMain();
+        result = A.finish('abandoned');
+        if (!result) return;
+        view = 'debrief'; renderDebrief(); focusMain();
       }), 'quiet'));
     const bar = el('progress');
     bar.max = steps().length;
@@ -283,6 +286,7 @@
         order = resolved.order;
         if (resolved.conflicts.length) { notices = resolved.conflicts; A.record('conflicts', notices.length); renderOrder(); return; }
         result = A.finish('completed');
+        if (!result) return;
         view = 'debrief';
         renderDebrief();
         focusMain();
@@ -404,6 +408,14 @@
     cancel.focus();
   }
   document.getElementById('dashboard-link').addEventListener('click', renderDashboard);
+  window.addEventListener('showcase-storage-change', () => {
+    if (view === 'order' && !A.running()) {
+      order = D.empty(); result = null; notices = [];
+      renderHome();
+      main.append(el('p', 'Showcase measurements were cleared in another tab, or this visit left the retained history. The current order was canceled.', 'notice'));
+      focusMain();
+    } else if (view === 'dashboard') renderDashboard();
+  });
   document.querySelector('.brand').addEventListener('click', event => {
     if (A.running()) { event.preventDefault(); renderDashboard(); }
   });
