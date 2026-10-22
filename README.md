@@ -22,13 +22,17 @@ The workflow uploads `showcase/` directly using GitHub's Pages actions. It does 
 
 ### Showcase versus development
 
-The showcase is a separately maintained, simplified demonstration of the menu experience, not a generated bundle or a promise of exact feature/measurement parity with the React application. It retains the simple/impossible contrast, customization, illustrative totals, mock completion, and local reflection. Nothing submits a real order or payment.
+The showcase is a separately maintained, simplified demonstration of the menu experience, not a generated bundle or a promise of exact feature/measurement parity with the React application. It has six simple-mode stages and fifteen impossible-mode stages, all 12 cuisines and 120 mock mains, plus a smaller catalog of four drinks, three desserts, and two sides. Shared calculations preserve ingredient quantity adjustments, portion scaling, and protein replacement; dependency changes have recovery controls. Cooking, heat, and ice are preferences only. There is no upsell engine or persisted reflection-rating questionnaire. Nothing submits a real order or payment.
 
 Showcase records stay on the device and use separate versioned storage from the original application. They are not interchangeable with the React study records. No third-party analytics, accounts, or remote persistence are used. These descriptive measurements are **not validated diagnoses of fatigue or proof of causation**.
 
+The showcase storage key is `impossible-menu-showcase-v1`, with `{version: 1, sessions: [...]}`. Each record contains `id`, `mode`, `status`, `startedAt`, `endedAt`, `actions`, `changes`, `backtracks`, `optionsShown`, `conflicts`, and `activeMs`. Timestamps are ISO strings; active time is milliseconds. Statuses are `running`, `completed`, `abandoned`, and `interrupted`. `actions` and `changes` count selections that change the order; navigation is separate. Options are counted once per actual stage visit/display, including newly revealed controls. Active time excludes hidden/unfocused windows, the dashboard, and dialogs.
+
+The dashboard keeps at most 200 visits, exports local summaries as `impossible-menu-showcase.json` or `.csv`, and clears only showcase data. Order contents and personal information are not persisted. Reloading/closing an active order records interruption; returning from browser history starts at the menu rather than restoring the order.
+
 To change the showcase, clone **this branch** and edit the files in `showcase/` directly. To develop the full React/TypeScript experiment, clone **`main`** and use its documented npm workflow. The original source, development tooling, and license remain in this branch for reference; they are not required by visitors or used by the showcase deployment.
 
-For maintainers only, **Showcase checks** installs the existing development dependencies and runs lint and standalone browser acceptance tests; it never builds the application. To run those checks yourself:
+For maintainers only, **Showcase checks** installs the existing development dependencies and runs lint and standalone browser acceptance tests; it never builds the application. The test fixture uses Python 3's standard-library static server; visitors and offline previews do not need Python. To run those checks yourself:
 
 ```sh
 npm ci

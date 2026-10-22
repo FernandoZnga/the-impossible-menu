@@ -156,3 +156,5 @@ blob-report/
 # Local participant exports
 impossible-menu-analytics*.json
 impossible-menu-analytics*.csv
+impossible-menu-showcase*.json
+impossible-menu-showcase*.csv

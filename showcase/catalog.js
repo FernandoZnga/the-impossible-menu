@@ -69,6 +69,7 @@ window.MenuCatalog = (() => {
     soy: ingredient('soy-sauce', 'Soy sauce', 0.4, 15, ['Soy', 'Wheat']),
     fishSauce: ingredient('fish-sauce', 'Fish sauce', 0.4, 10, ['Fish']),
     kimchi: ingredient('kimchi', 'Traditional kimchi', 0.9, 25, ['Fish']),
+    olive: ingredient('olive', 'Olives', 0.8, 50),
   };
   // Compact hand-authored recipe records: name, base price, kcal, pantry keys.
   // Descriptions below intentionally summarize ingredients, not original recipe prose.

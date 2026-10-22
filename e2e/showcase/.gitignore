@@ -1,0 +1,6 @@
+test-results/
+root-test-results/
+playwright-report/
+playwright-transform-cache-*/
+node-compile-cache/
+playwright-artifacts-*/
